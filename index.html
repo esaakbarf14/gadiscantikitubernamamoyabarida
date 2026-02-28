@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HBD Moya Barida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fff5f7;
+            overflow: hidden;
+            position: fixed;
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Animasi Kedip (Pulse) */
+@keyframes heartPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-love {
+    display: inline-block;
+    animation: heartPulse 2s infinite ease-in-out;
+    /* Memaksa iOS merender emoji sebagai teks agar warnanya bisa diatur */
+    color: #e889a3 !important;
+    text-shadow: 0 0 0 #e889a3; 
+    -webkit-text-fill-color: #e889a3;
+}
+        /* Style Foto di Dalam Bab Cerita */
+.photo-frame-bab {
+    width: 100%;
+    max-width: 260px; /* Ukuran maksimal foto di dalam bab */
+    height: 180px; /* Tinggi foto diatur tetap */
+    margin: 0 auto;
+    border: 3px solid #fff5f7;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(232, 137, 163, 0.15);
+}
+
+.bab-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Foto akan mengisi bingkai tanpa gepeng */
+    object-position: center; /* Fokus foto di tengah */
+}
+
+/* Container untuk Galeri Foto */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+/* Penyesuaian Photo Frame Bab agar fleksibel */
+.photo-frame-bab {
+    width: 100%;
+    border: 2px solid #fff5f7;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(232, 137, 163, 0.1);
+    background: #fafafa;
+}
+
+.bab-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+        .handwritten { font-family: 'Patrick Hand', cursive; }
+
+        .book-container { 
+            perspective: 2000px; 
+            width: 100%;
+            display: flex; justify-content: center;
+            padding-bottom: 20px;
+        }
+        
+        .book {
+            width: 330px; height: 530px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .page {
+            position: absolute; inset: 0;
+            backface-visibility: hidden;
+            border-radius: 4px 16px 16px 4px;
+        }
+
+        .front {
+            background: linear-gradient(135deg, #e889a3 0%, #d46a89 100%);
+            z-index: 20;
+            transform-origin: left;
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 10px 10px 40px rgba(0,0,0,0.1);
+            border-left: 6px solid rgba(0,0,0,0.15);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .book.open .front { transform: rotateY(-145deg); }
+
+        .inside {
+            background-color: #ffffff;
+            z-index: 10;
+            box-shadow: inset 25px 0 40px rgba(0,0,0,0.03);
+            border: 1px solid #f3f4f6;
+            display: flex; flex-direction: column; padding: 25px;
+        }
+
+     .content-scroll {
+    flex-grow: 1; 
+    overflow-y: auto;
+    padding-right: 8px; 
+    margin-bottom: 10px;
+    text-align: justify;
+    /* Tambahkan ini agar scroll di HP lebih smooth */
+    -webkit-overflow-scrolling: touch; 
+}
+        .chapter-content {
+            display: none;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #374151;
+        }
+        
+        .chapter-content.active { display: block; }
+
+        .moya-wrapper {
+            width: 100%;
+            height: 250px;
+            margin-top: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .moya-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: bottom;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+        }
+
+        .music-card {
+            background: #fff5f7; border: 1px solid #e889a3;
+            border-radius: 12px; padding: 10px;
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            margin: 15px 0;
+        }
+
+        .heart-particle {
+            position: absolute; color: #e889a3;
+            pointer-events: none; z-index: 1;
+            animation: fly linear forwards;
+        }
+
+        @keyframes fly {
+            0% { transform: translateY(0) scale(0); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) translateX(40px) rotate(45deg); opacity: 0; }
+        }
+
+        .cursor { border-right: 2px solid #e889a3; animation: blink 0.7s infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        /* Style Scrollbar */
+        .content-scroll::-webkit-scrollbar { width: 3px; }
+        .content-scroll::-webkit-scrollbar-thumb { background: #e889a3; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="heart-container" class="fixed inset-0 pointer-events-none"></div>
+
+    <div class="book-container">
+        <div id="myBook" class="book">
+            
+            <div class="page inside">
+                <div class="content-scroll" id="scrollContainer">
+                    
+                    <div id="ch-1" class="chapter-content active text-center">
+                        <div class="mt-4 mb-2 text-[#e889a3] text-4xl animate-love">❤</div>
+                        <h1 class="text-2xl font-bold text-gray-800 mb-1">Moya Barida is turning 23</h1>
+                        <div class="w-10 h-1 bg-[#e889a3] mx-auto mb-4 rounded-full"></div>
+                        
+                        <div class="music-card text-left" onclick="toggleMusic()">
+                            <div class="w-8 h-8 bg-[#e889a3] rounded-full flex justify-center items-center text-white" id="musicBtnIcon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
+                            <div>
+                                <div class="text-[9px] text-[#e889a3] font-bold tracking-widest uppercase">Music</div>
+                                <div class="text-[11px] text-gray-700 font-semibold uppercase">TULUS — JATUH SUKA</div>
+                            </div>
+                        </div>
+                      <div class="mt-6 p-5 bg-pink-50/50 rounded-2xl border border-pink-100 shadow-sm">
+    <div class="text-[12px] text-gray-700 font-semibold leading-relaxed italic text-justify tracking-tight">
+        I hope all your dreams come true, that you’re always surrounded by good people, that your education goes smoothly, and that one by one, everything on your wish list becomes reality. May all the good things in life always find their way to you.
+        
+        <div class="my-3 border-t border-pink-200/50 w-1/2 mx-auto"></div>
+        
+        I think that love was something scary. But since I’ve been with you, I’ve realized that love can actually feel this beautiful and this happy. Thank you for coming into my life, for always caring about me, for never getting tired of reminding me to take care of my health, and for patiently correcting me when I’m wrong.
+        
+        <div class="my-3 border-t border-pink-200/50 w-1/2 mx-auto"></div>
+        
+        I’m truly grateful to know you. Let’s take good care of this relationship and face whatever comes our way together in the future.
+    </div>
+    
+    <div class="mt-4 text-center">
+        <span class="text-[#e889a3] text-lg">❤❤❤</span>
+    </div>
+</div>
+                        <div class="mt-10 opacity-40">
+        <p class="text-[8px] tracking-[0.4em] uppercase text-gray-500">— Esa Akbar Febrian —</p>
+    </div>
+                    </div>
+
+               <div id="ch-2" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase">Sinopsis</h2>
+    <div class="typewriter-text" data-text="Gadis Cantik Itu Bernama Moya Barida\n\nMoya Barida adalah kakak kelas Esa di masa SMP. Mereka berada di satu ekstrakurikuler yang sama—basket. Perkenalan itu terjadi begitu saja, Esa hanya mengenalnya sebagai kakak kelas yang ramah, yang sesekali menyapa sebelum latihan dimulai atau berbincang ringan setelahnya. Tidak ada usaha untuk mendekat lebih jauh. Hanya sebatas teman, sebatas kagum yang sederhana dan diam-diam.\n\nMasa SMP berlalu dengan cepat. Kelulusan datang seperti halaman yang ditutup begitu saja. Mereka berpisah tanpa harapan untuk bertemu lagi, tanpa kesan bahwa pertemuan itu akan berarti apa-apa di masa depan. Bagi Esa, Moya hanyalah bagian kecil dari kenangan remaja—singkat, dan mungkin tak akan terulang.\n\nNamun waktu punya cara yang tak bisa ditebak.\n\nDi masa universitas, di tengah kehidupan yang jauh berbeda dari seragam putih biru dulu, semesta mempertemukan mereka kembali. Pertemuan itu terasa seperti sesuatu yang tak disengaja, tetapi terlalu tepat untuk disebut kebetulan.\n\nKini mereka tidak lagi berdiri sebagai adik dan kakak kelas di pinggir lapangan. Waktu telah mengubah banyak hal. Pertemuan yang dulu terasa biasa saja, yang sempat tenggelam sebagai kenangan SMP yang singkat, tiba-tiba memiliki makna yang berbeda.\n\nEsa tak pernah menyangka bahwa seseorang yang dulu hanya ia sapa sekadarnya—yang kehadirannya terasa sederhana—justru kembali hadir di fase hidup yang lebih dewasa. Dan di sanalah ia mulai berpikir: mungkin bukan pertemuan pertamanya yang istimewa, melainkan cara semesta menyimpannya untuk datang kembali di waktu yang tak pernah ia duga."></div>
+</div>
+
+<div id="ch-3" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase">Prolog</h2>
+    <div class="typewriter-text" data-text="Aku tidak benar-benar percaya pada pertemuan kedua.\n\nBagiku, sebagian orang memang hanya datang untuk satu fase. Hadir sebentar, lalu selesai. Tidak semua yang pernah kita kenal harus kembali.\n\nAku selalu punya rasa takut pada waktu. Bukan karena ia berjalan cepat, tapi karena ia bisa mengubah segalanya tanpa kita sadari. Orang yang dulu terasa dekat bisa jadi asing. Perasaan yang dulu terasa penting bisa jadi biasa saja.\n\nAtau mungkin… sebaliknya.\n\nMalam itu, selepas bekerja, aku pulang dalam keadaan lelah. Kepala penuh, badan capek, dan pikiran hanya ingin istirahat. Aku rebahan, membuka ponsel tanpa tujuan. Hanya kebiasaan sebelum tidur.\n\nLalu layar itu menyala.\n\n“moya barida mengirim anda pesan.”\n\nJantungku tidak langsung berdebar kencang. Justru hening. Seperti ada jeda kecil di dalam dada.\n\nNama itu tidak asing. Tapi juga tidak pernah benar-benar kupanggil lagi selama bertahun-tahun.\n\nAku menatap notifikasi itu cukup lama. Tidak langsung membukanya. Seolah kalau kubuka, sesuatu akan berubah.\n\nPadahal dulu, di masa SMP, dia hanya kakak kelas di ekstrakurikuler basket. Kami hanya saling sapa. Tidak lebih. Tidak pernah ada cerita besar. Tidak pernah ada momen yang terasa seperti awal dari apa pun.\n\nLalu kenapa sekarang terasa berbeda?\n\nKenapa satu notifikasi sederhana bisa membuat malam yang biasa saja mendadak terasa… tidak biasa?\n\nAku tersenyum, Aku menatap layar itu beberapa detik lebih lama. Nama itu masih sama. Rasanya juga masih aneh.\n\nAku kira semuanya sudah selesai. Ternyata tidak.\n\nDan malam itu aku mengerti satu hal:\n\npertemuan kami kembali baru saja dimulai."></div>
+</div>
+                  <div id="ch-4" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 1 : Gadis Cantik Itu Bernama Moya Barida
+    </h2>
+    
+    <div class="typewriter-text" data-text="Malam itu sebenarnya biasa saja tapi tidak untukku. dan menurutku malam itu adalah malam yang penuh dengan keajaiban.\n\nAku duduk di dalam mobil bersama omku, memegang erat kantong berisi Fore Coffee dan roti yang kupilih dengan penuh pertimbangan. Lampu jalan berderet menemani perjalanan kami menuju rumah Moya, sementara di dadaku… degup jantungku terasa jauh lebih ribut dari biasanya.\n\nSemakin dekat ke rumahnya,\nsemakin sulit aku berpura-pura tenang.\nMobil akhirnya berhenti di depan rumahnya.\n\nAku menarik napas panjang, mencoba mengumpulkan keberanian yang dari tadi berantakan. Dengan langkah pelan, aku turun dari mobil, masih menggenggam minuman dan roti itu seolah itu satu-satunya pegangan keberanianku malam ini.\n\nAku kirim pesan singkat:\n“Aku udah di depan ya.”\n\nBeberapa menit kemudian…\nMoya keluar dari dalam rumah.\nDia tidak duduk.\nTidak menunggu.\nDia berjalan pelan ke arahku…\ndengan senyum manis yang langsung membuat dunia di sekitarku terasa sunyi.\nDia memakai baju tidur yang sederhana.\n\nTapi justru di situlah cantiknya diam-diam selalu memikatku dan ingin aku lihat terus.\nUntuk beberapa detik, aku benar-benar kehilangan kata.\n\nKalau malam itu punya pusat cahaya yang sangat terang,\nmungkin semuanya sedang jatuh tepat di wajahnya. wajah yang begitu sangat cantik.\n\nDia kemudian menyapa omku dengan sopan, menyalaminya dengan hangat. Omku membalas dengan senyum ramah, sementara aku masih berdiri sedikit terpaku, berusaha menyembunyikan fakta bahwa aku sudah kalah lebih dulu oleh senyumnya.\n\nAku akhirnya menyerahkan yang kubawa.\n\n“Ini buat kamu…”\n\nSederhana.\nHanya Fore Coffee dan roti biasa.\n\nTapi saat jari kami hampir bersentuhan ketika dia menerimanya\ndetik itu terasa jauh lebih lama dari seharusnya.\nDia tersenyum lagi.\nAnd honestly…\ndi malam tanggal 01 Januari 2026 itu,\naku sadar satu hal.\n\nDia adalah perempuan yang sangat sangat cantik.\n\nTak lama setelah itu aku pamit pulang. Mobil kembali berjalan menjauh dari rumahnya, tapi pikiranku… masih tertinggal di sana.\n\nSampai tiba-tiba\nlayar ponselku menyala.\nPesan dari Moya.\n\n“Terimakasih”\n“Hati-hati di jalan ya..”\n“Kalau sudah sampai kabarin”\n\nAku menatap layar itu cukup lama.\nDan tanpa sadar… aku tersenyum.\n\nDan mungkin, cerita kita memang baru saja dimulai."></div>
+
+    <div class="mt-8 mb-6 border-t border-pink-50 pt-6">
+        <div class="photo-frame-bab">
+            <img src="c1.png" alt="Momen Fore Coffee" class="bab-photo">
+        </div>
+        <p class="text-[10px] text-gray-400 italic text-center mt-3">
+            01 Januari 2026 — Malam yang penuh keajaiban.
+        </p>
+    </div>
+</div>
+                   <div id="ch-5" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 2 : Boneka Pilihan Esa, Boneka Beruang Putih Pertama Moya Barida
+    </h2>
+    
+    <div class="typewriter-text" data-text="Hari itu aku datang menjemput Moya. Jarum jam hampir menunjuk pukul 16.00 ketika kami akhirnya berangkat menuju AEON. Sore itu terasa ringan, mungkin karena sekarang perjalanan ini tidak lagi kulalui sendirian.\n\nSesampainya di AEON, kami langsung menuju Yoshinoya. Kami duduk berhadapan, menunggu makanan tiba, lalu membuka laptop. Di tengah suasana mall yang ramai, aku mulai mengajarinya coding.\n\nLucu sebenarnya. Di sekitar kami orang-orang sibuk dengan urusan masing-masing, sementara kami membahas baris-baris kode.\n\nSesekali Moya mengernyit kecil saat bingung. Sesekali dia tersenyum puas saat akhirnya mengerti. Dan tanpa sadar… aku menikmati momen itu.\n\nSetelah selesai makan dan belajar, kami berjalan ke Miniso. “Ke Miniso yuk, aku mau cari blind box,” katanya ringan.\n\nKami menyusuri rak demi rak bersama. Namun setelah beberapa putaran, blind box yang dia cari tidak ada. Moya lalu bergeser ke rak boneka. Dia berdiri cukup lama di sana… memperhatikan satu per satu dengan ekspresi sedikit bingung, seolah tidak tahu harus memilih yang mana.\n\nAku memperhatikannya sebentar. Lalu dia menoleh. “Yaudah… kamu aja yang pilihin aku boneka.”\n\nAku mengangguk kecil, lalu mataku berhenti pada satu pilihan: boneka beruang putih. Lembut dan lucu. Dan entah kenapa… terasa cocok untuk dia.\n\nAku mengambilnya dan menyerahkannya. “Aku suka warna putih, jadi aku pilih yang ini.”\n\nSenyumnya langsung muncul lagi. Dan jujur… itu cukup buat hatiku senang.\n\nSetelah dari Miniso, kami membeli Janji Jiwa. Di depan kasir, kejadian kecil yang tidak direncanakan itu terjadi. Kami sama-sama membuka QRIS.\n\n“Aku aja yang bayar,” kataku cepat.\n“Engga, aku aja,” balasnya.\n\nBeberapa detik kami benar-benar berebut scan. Dan… aku kalah. Pembayaran sudah lebih dulu berhasil dari ponselnya. Aku cuma bisa geleng kecil sambil tertawa pelan. Dia menang… dengan cara yang manis.\n\nMalam sudah turun ketika kami kembali ke mobil dan menuju area Patung Kuda. Mobil berjalan pelan melewati area itu. Di dalam mobil yang temaram, aku mulai menceritakan hal-hal kecil di sekitar sana. Moya mendengarkan sambil sesekali menoleh ke arah yang kutunjuk. Obrolannya tidak panjang, tapi cukup lucu untuk menemani jalan malam itu.\n\nDi perjalanan, Moya tiba-tiba berkata dengan nada bercanda, “Ga ngajak ngobrol sih… bikin aku ngantuk.”\n\nAku langsung menoleh sebentar, lalu tertawa kecil. Kalimat sederhana itu justru membuat suasana jadi hangat sekaligus lucu.\n\nBeberapa menit kemudian, awalnya aku berniat langsung mengantarnya pulang. Namun aku melirik sebentar ke arahnya lalu berkata pelan, “Kamu ngantuk nggak?”\n\n“Enggak,” ucapnya.\n\n“Daripada kita gaada tujuan, mau ikut aku ke acara bakar-bakar temen kampus nggak?”\n\nAda jeda kecil di antara kami. Beberapa detik dia tidak langsung menjawab, membuat jantungku diam-diam ikut menunggu. Lalu Moya menoleh.\n\n“Emang… boleh?” katanya pelan.\n\nAku tersenyum kecil, berusaha terlihat santai walau sebenarnya dalam hati berharap dia bilang iya. “Boleh banget.”\n\nDia terdiam sebentar, lalu mengangguk pelan. “Iya deh… ikut.”\n\nDan entah kenapa, di detik itu suasana di dalam mobil terasa langsung berubah. Malam ini masih belum selesai.\n\nSesampainya di sana, suasana hangat tawa teman-teman langsung menyambut. Aku menarik napas kecil, lalu dengan tenang berkata, “Kenalin… ini Moya.”\n\nMalam itu untuk pertama kalinya aku memperkenalkan seorang perempuan kepada teman-teman kampusku.\n\nAcara selesai, kami berfoto bersama sebelum aku pamit mengantarnya pulang. Di depan rumahnya, kami masih sempat mengobrol hal-hal random yang terasa hangat. Tak lama, aku berpamitan.\n\n“Aku pulang dulu.”\nMoya tersenyum kecil. “Dadah.”\n\nBeberapa menit setelah aku jalan, ponselku bergetar. “Kalau udah sampai, kabarin ya.”\n\nAku tersenyum kecil membaca pesannya. Dan entah sejak kapan, aku merasa bahwa perlahan dia mulai masuk dalam kehidupanku."></div>
+
+    <div class="mt-8 mb-6 border-t border-pink-50 pt-6">
+        <div class="photo-frame-bab">
+            <img src="c2.png" alt="Momen Boneka Beruang" class="bab-photo">
+        </div>
+        <p class="text-[10px] text-gray-400 italic text-center mt-3">
+            Momen di AEON — Boneka beruang putih pertama.
+        </p>
+    </div>
+</div>
+                    <div id="ch-6" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 3 : Antara Hari-Hariku, Ada Moya Barida
+    </h2>
+    
+    <div class="typewriter-text" data-text="Hari-hari setelah itu, nama Moya Barida semakin sering muncul di ponselku. Di chat siang dan sore, di call panjang menjelang malam.\n\nAku mulai mengenalnya… Kami mulai saling bercerita, dan tanpa sadar, aku semakin ingin tahu lebih banyak. Moya selalu punya cerita tentang dirinya. Cerita-cerita kecil yang mungkin terdengar biasa bagi orang lain, tapi tidak bagiku.\n\nAku selalu ingin mengingat semuanya. Hal-hal kecil tentang dia yang entah kenapa terasa penting bagiku. Dan tanpa sadar, aku mulai suka kepadanya.\n\nTapi cerita itu tidak selalu mulus. Ada hari-hari di mana aku sebal karena Moya selalu membalas pesanku lama sekali. Kadang aku menunggu, kadang aku menghela napas panjang melihat chat yang belum juga dibalas. Kesal? Iya. Tapi anehnya… aku tetap menunggunya. Karena setiap kali dia muncul di layar, semua rasa kesal itu seperti hilang begitu saja.\n\nApalagi saat kami call. Suara Moya terdengar sangat lucu. Dan di setiap call itu, aku selalu berpikir hal yang sama: dia ini… cantik banget. Bukan cuma dari wajahnya, tapi dari caranya tertawa, dari caranya merespon ceritaku.\n\nSesekali aku menemuinya. Pertemuan-pertemuan singkat yang justru membuatku semakin nyaman dan selalu ingin melihat wajah cantiknya.\n\nSuatu hari, Moya bilang dia akan pulang ke Cikarang. Sejak saat itu, aku diam-diam menyiapkan sesuatu. Bukan hal besar, tapi cukup berarti setidaknya bagiku. Aku membayangkan reaksinya, membayangkan senyumnya. Diam-diam, aku menunggu hari itu datang.\n\nNamun sebelum semuanya terjadi, Moya bilang dia mau main ke AEON bersama temannya, Yuni. Aku hanya membalas biasa saja. Tapi setelah itu… aku menunggu. Menunggu notifikasi darinya. Menit pertama masih biasa, sejam berikutnya mulai terasa lama.\n\nLayar ponselku tetap diam. Tidak ada kabar. Tidak ada pesan. Dan entah kenapa, perasaan di dadaku mulai tidak tenang. Pikiranku mulai ke mana-mana, padahal mungkin dia hanya sedang sibuk. Tapi tetap saja… aku menunggu terlalu lama.\n\nSampai akhirnya, dengan perasaan yang campur aduk, jariku mengetik pelan: “Aku pamit yaa…”\n\nPesan itu terkirim di tengah malam yang mulai diguyur hujan deras.\n\nDan beberapa menit kemudian teleponku berdering. Moya menelepon. Aku menolaknya, tapi Moya meneleponku kembali dan akupun mengangkatnya.\n\nMalam itu kami mengobrol tentang kesalahpahaman kecil yang terasa besar. Beberapa kali kami sama-sama terdiam. Dan di setiap hening itu, aku takut kehilangannya lebih dari yang mau kuakui.\n\nTapi… Moya tidak pergi. Aku juga tidak. Pelan-pelan, suasana kembali hangat. Tawanya muncul lagi yang selalu berhasil menenangkan dadaku. Kami terus berbicara sampai subuh datang perlahan. Dan di ujung panggilan itu, aku akhirnya mengerti bahwa semua itu adalah kesalahanku.\n\nKonflik itu selesai di waktu subuh. Aku tersenyum kecil karena aku tahu: jalan kedua kami mencari kerak telor baru saja dimulai."></div>
+</div>
+                   <div id="ch-7" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 4 : Kerak Telor dan Bunga untuk Moya Barida
+    </h2>
+    
+    <div class="typewriter-text" data-text="Jalan kedua kami dimulai sehabis magrib.\n\nPukul 19.30, aku menjemput Moya. Di kursi sebelahku, sudah ada yang kusiapkan sejak kemarin: bunga dan boneka.\n\nDi malam itu dia memakai baju pink dan jaket cream. Sangat cantik dan manis. Aku sampai harus mengalihkan pandangan sebentar, karena kalau terlalu lama melihatnya, aku takut dia sadar betapa cantiknya dia di mataku malam itu. Aku sendiri memakai baju putih dan kemeja biru.\n\nSaat dia duduk di sampingku, aku tersenyum kecil. Kami terlihat serasi, hehehe. Aku menyerahkan bunga dan boneka itu, Moya terlihat sangat senang. Aku tidak mengatakan apa-apa, tapi di dalam hati aku tahu, dia adalah perempuan pertama yang kuberikan bunga seperti ini. Dan entah kenapa… rasanya tepat kalau itu dia.\n\nKami mencari kerak telor dan akhirnya berhenti di Taman Sehati. Saat makanan itu datang, Moya menatapnya penuh penasaran. “Aku kira ini kayak martabak…”\n\nAku langsung tertawa. Aku menatapnya sambil tersenyum. Ketika suapan pertama, dia tidak ingin ditatap olehku. Moya selalu menggeser pipiku dan berkata, “Jangan diliatin mulu…”\n\nSaat dia mengambil suapan pertama, ekspresinya berubah. Dan ya… dia memang selucu itu. Tapi jujur saja, bagaimana aku bisa tidak melihatnya kalau dia secantik itu di depanku?\n\nSebelum pulang, kami kembali ke mobil dan berfoto bersama. Masih dengan tawa kecil yang belum habis. Lalu Moya mengeluarkan sesuatu dari tasnya, dia berkata: “Aku habis jajan dan aku beliin ini karena keinget sama kamu.”\n\nSebuah kaleng berbentuk kaos kaki warnanya biru. Dia memberikannya kepadaku, lalu dia menunjukkan kaleng kedua berwarna pink. Di dalamnya… permen chupachups.\n\nMalam itu dia memakai baju pink, aku memakai kemeja biru. Dan sekarang, dia memberiku sesuatu dengan warna yang sama dengan bajuku, kaleng pink yang dia tunjukkan pun sama dengan baju yang dia pakai. Entah kenapa keajaiban itu sangat lucu. Aku merasa sangat senang.\n\nDi perjalanan pulang, kami membeli martabak, dan kami juga membawa dimsum yang sudah dipesan kakaknya Moya. Setelah tiba dan mengambil pesanan itu, ternyata kakak Moya menitipkan dimsum untukku. Entah kenapa itu sangat berarti bagiku.\n\nSepanjang jalan, aku beberapa kali melirik ke arahnya. Masih dengan rasa yang sama. Masih dengan kagum. Jalan kedua ini bukan sekadar pertemuan. Ini malam di mana aku semakin jatuh… lebih dalam pada Moya Barida."></div>
+
+    <div class="mt-8 mb-6 border-t border-pink-50 pt-6">
+        <div class="photo-frame-bab">
+            <img src="c4.png" alt="Momen Bunga dan Kerak Telor" class="bab-photo">
+        </div>
+        <p class="text-[10px] text-gray-400 italic text-center mt-3">
+            Taman Sehati — Malam dengan kerak telor
+        </p>
+    </div>
+</div>
+                    <div id="ch-8" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 5 : Tentang Moya Barida dan Kesalahpahaman Kedua
+    </h2>
+    
+    <div class="typewriter-text" data-text="Hari-hari terus berjalan bersamanya. Tanpa terasa, aku dan Moya semakin dekat. Kami saling bertukar kabar, mengobrol lewat WhatsApp, lalu berlanjut ke call yang kadang berlangsung lebih lama dari yang direncanakan. Sesekali aku menemuinya, hanya untuk memastikan bahwa kehadirannya benar-benar ada, bukan hanya lewat layar handphone saja.\n\nPerlahan, dia menjadi bagian dari rutinitasku. Namanya berubah menjadi notifikasi favorit di ponselku. Setiap bunyi pesan masuk darinya selalu berhasil membuatku tersenyum, bahkan di hari yang paling melelahkan sekalipun.\n\nMoya mulai banyak bercerita tentang dirinya. Tentang hal-hal kecil yang mungkin bagi orang lain tidak penting, tapi bagiku, semuanya terasa begitu penting.\n\nDia pernah bercerita kalau saat pulang kampung ke Ciamis, tepatnya di rumah neneknya, dia tidak suka pipinya dipegang-pegang karena katanya kulit wajahnya sensitif. Caranya bercerita selalu mengundang tawa. Dia juga bercerita tentang masa SMP-nya di kampung; ketika dia mandi sambil mendengarkan musik, terlalu asyik sampai tidak sadar ada lebah di kamar mandi… dan akhirnya disengat.\n\nCara dia menceritakannya begitu lucu, penuh ekspresi, seolah kejadian itu berubah menjadi kenangan yang menggemaskan. Lalu ada cerita tentang mie instan. Setiap kali belanja di Alfamart, dia diam-diam menyelipkan mie instan ke dalam tasnya, karena ayahnya melarangnya makan mie terlalu sering. Cara dia berbisik seolah itu rahasia besar dunia membuatku tertawa kecil.\n\nCerita-cerita itu sederhana, tapi aku selalu ingin mengingatnya. Aku ingin mengingat apa yang dia suka, apa yang dia takuti, kebiasaannya, bahkan cerita-cerita lucunya. Karena semakin aku mendengar, semakin aku menyadari bahwa aku menyukainya. Bukan hanya karena cantiknya, tapi karena dirinya.\n\nNamun, hubungan yang semakin dalam kadang juga semakin rapuh. Suatu hari, terjadi kesalahpahaman kecil di antara kami. Sepele, tapi cukup untuk membuat jarak. Seharian kami tidak berkabar. Ponselku sunyi. Dan entah kenapa, sunyi itu terasa lebih menyakitkan dari biasanya.\n\nJujur saja, itu salahku. Aku terlalu cepat mengambil kesimpulan. Malamnya, Moya meneleponku. Suaranya terdengar berbeda. Lebih pelan. Lebih berat. Dia mengatakan sesuatu yang membuat dadaku terasa kosong:\n\n“Kalau aku ada salah itu cerita, bukan tiba-tiba ngediemin. Kalau seperti ini terus… aku nggak bisa.”\n\nKalimat itu sederhana, tapi di telingaku terdengar seperti ancaman kehilangan. Aku terdiam. Untuk pertama kalinya, aku benar-benar takut kehilangannya. Aku meminta maaf. Bukan hanya karena salah paham itu, tapi karena aku tidak ingin hubungan ini selesai.\n\nKami mulai meluruskan semuanya. Dan malam itu, semesta seperti memberi kami kesempatan kedua. Tawa kecil mulai terdengar lagi. Kesalahpahaman kedua itu akhirnya selesai.\n\nDan aku belajar satu hal penting: Semakin dalam kita mengenal seseorang, semakin besar peluang untuk saling menyakiti. Tapi jika dua orang masih memilih untuk bertahan dan memperbaiki, maka hubungan itu bukan sekadar kebetulan.\n\nMoya Barida bukan lagi sekadar nama di notifikasi favoritku. Dia sudah menjadi bagian dari hariku. Dan untuk pertama kalinya, aku sadar: aku tidak ingin kehilangannya.\n\nAnehnya… setelah malam itu, kami justru terasa semakin dekat. Lebih jujur. Lebih terbuka. Lebih saling menjaga. Seolah-olah, setelah hampir kehilangan, kami sama-sama sadar bahwa hubungan ini terlalu berharga untuk disia-siakan.\n\nDan sejak saat itu, aku tahu satu hal: perasaanku ke Moya Barida bukan lagi sekadar suka yang lewat begitu saja. Dia sudah menjadi seseorang yang ingin terus aku jaga."></div>
+
+    <div class="mt-8 mb-6 border-t border-pink-50 pt-6">
+        <div class="photo-frame-bab">
+            <img src="c5.png" alt="Momen Moya Barida" class="bab-photo">
+        </div>
+        <p class="text-[10px] text-gray-400 italic text-center mt-3">
+            Notifikasi favorit — Yang ingin terus aku jaga.
+        </p>
+    </div>
+</div>
+                    <div id="ch-9" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 6 : Moya Barida di Hari Ulang Tahunku
+    </h2>
+    
+    <div class="typewriter-text" data-text="Seorang remaja berusia 21 tahun. Ulang tahunku selalu jatuh di hari Valentine, 14 Februari.\n\nTapi jujur saja… bagiku ulang tahun tidak pernah terasa terlalu spesial. Tidak ada kejutan besar, tidak ada perayaan. Aku juga bukan orang yang terbiasa dirayakan. Sampai hari itu datang.\n\nPada 14 Februari itu, Moya mengabariku bahwa dia akan pulang ke Cikarang. Tanpa banyak pikir, aku langsung berinisiatif menjemputnya. Apalagi… diam-diam aku juga sudah menyiapkan kado Valentine untuknya. Sebelum aku berangkat, Moya sempat berkata: “Tolong bawakan dimsum yang sudah aku pesan… tapi bawanya pake mobil ya, takut rusak.”\n\nAku tidak curiga sama sekali. Ah… dia memang suka dimsum mentai, pikirku. Aku pun langsung meluncur ke lokasi yang dia kirimkan. Namun begitu sampai, aku langsung mengernyit. Tempatnya… aneh. Di depan justru ada spanduk besar bertuliskan: “Berangkat Umroh.”\n\nAku berdiri sebentar di depan. Dalam hati mulai mikir: Ini… dimsum atau aku yang salah alamat? Tiba-tiba seorang Om keluar dan membawakan pesanan yang sudah Moya pesan. Ya sudah… aku ambil saja kotaknya. Aku langsung taruh di mobil tanpa membuka isinya karena aku juga sedang mengejar waktu. Kalau saja aku tahu… aku pasti sudah senyum-senyum sendiri dari tadi.\n\nPukul 16.00 aku tiba di asrama tempat Moya berada. Tak lama, dia turun. Mengenakan baju hitam. Dan seperti biasa… di mataku, dia selalu cantik.\n\nKami pun berangkat. Karena malam sudah turun, kami sempat beristirahat di rest area. Dan di situlah semuanya berubah. Tiba-tiba Moya membuka kotak “dimsum” yang tadi aku ambil. Dan… itu bukan dimsum. Itu adalah kue ulang tahun. Berwarna biru, dengan gambar anime kesukaanku, dan namaku tertulis rapi di atasnya.\n\nAku tersenyum, senyum yang bahkan aku sendiri tidak tahu bagaimana cara menahannya. Untuk pertama kalinya dalam hidupku… ada seorang perempuan yang merayakan ulang tahunku. Bukan sekadar mengucapkan, tapi benar-benar menyiapkan semuanya.\n\nSesampainya di depan rumah Moya, kami masih berbincang di dalam mobil. Lalu tiba-tiba Moya membuka tas besar yang sejak tadi dia bawa. Dan di situlah aku sadar… itu bukan sekadar barang bawaan. Itu kado ulang tahunku. Banyak sekali. Ternyata… semuanya sudah dia siapkan untukku.\n\nSaat aku pamit pulang, Moya sempat berkata pelan, “Nanti buka satu tas lagi ya… yang isinya makanan.”\n\nSesampainya di rumah dan membuka tas itu, aku benar-benar terdiam. Di setiap makanan… di setiap obat… di setiap minuman… ada note kecil. Tulisan tangan tentang aku. Tentang hal-hal kecil yang bahkan tidak semua orang ingat.\n\nMataku perih. Dan tanpa sadar, air mataku jatuh. Aku tersenyum di saat yang sama. Mungkin… ini adalah hadiah paling berarti yang pernah aku terima. Karena di malam itu, aku sadar satu hal: aku tidak hanya diingat. Aku diperhatikan. Aku dipikirkan.\n\nDan di hari ulang tahunku yang ke-22, untuk pertama kalinya dalam hidupku, aku benar-benar merasa dirayakan. Oleh Moya Barida."></div>
+
+    <div class="mt-8 mb-6 border-t border-pink-50 pt-6">
+        <div class="photo-frame-bab">
+            <img src="c6.png" alt="Kado Terindah dari Moya" class="bab-photo">
+        </div>
+        <p class="text-[10px] text-gray-400 italic text-center mt-3">
+            14 Februari 2026 — Saat aku merasa benar-benar dirayakan.
+        </p>
+    </div>
+</div>
+                  <div id="ch-10" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-3 uppercase text-center">
+        Chapter 7 : Tentang Rencanaku di Hari Ulang Tahun ke-23 Moya Barida
+    </h2>
+    
+    <div class="typewriter-text" data-text="17 hari sebelum ulang tahun Moya Barida, aku sudah mulai merencanakan sesuatu. Mungkin terlalu dini. Mungkin juga terlihat berlebihan. Tapi entah kenapa, aku ingin hari ulang tahunnya nanti menjadi momen yang benar-benar spesial.\n\nAda pepatah yang sering aku ingat: “Dan berencanalah kalian, dan Tuhan juga berencana. Dan Tuhan adalah sebaik-baiknya perencana.” (QS. Ali Imran: 54).\n\nAku percaya pada satu hal—usaha dan niat yang sungguh-sungguh tidak akan pernah sia-sia. Karena tugasku adalah mempersiapkan yang terbaik. Dan sisanya… biarlah Tuhan yang menyempurnakan.\n\nSore itu, Rabu, 11 Maret 2026, sepulang kerja, aku mulai menyiapkan semuanya. Sebuah fresh flower. Tiga tas pink. Tas pertama berisi perlengkapan serba pink kesukaannya. Tas kedua berisi berbagai makanan kecil favoritnya. Dan tas ketiga… berisi cumi dan ayam goreng masakan ibuku. Aku punya harapan sederhana: suatu hari nanti, dia bisa terus makan masakan dari ibuku.\n\nMalam harinya, aku tiba di depan asramanya. Aku segera menelponnya. “Aku di depan asrama, Ga.” Tak lama kemudian, dia turun. Mengenakan pakaian...\n__________________________\n\nDan seperti biasa, dia tetap sama. Begitu cantik di mataku. Dia adalah cantiknya aku.\n\nAku menyambutnya dengan kue ulang tahun. Moya tersenyum, lalu perlahan meniup lilin berbentuk angka 23. Melihatnya meniup lilin di depanku malam itu… hatiku merasa sangat senang.\n\nTapi ternyata… malam itu belum selesai. Ada satu hadiah lagi. Yang paling spesial. Sebuah beruang kecil berwarna pink. Perlahan aku membukanya. Dan di dalamnya, sebuah cincin. Cincin emas.\n\nMoya tersenyum—senyum yang tidak akan pernah aku lupa. Aku menatapnya, lalu berkata: “Mungkin dari semua hadiah… nggak terlalu spesial. Tapi yang spesial itu… ini.”\n\nAku menatapnya tajam. “Aku mau cincin ini ada di jari manismu. Bukan sekadar hiasan, tapi janji dan komitmenku ke kamu.”\n\nMoya menjawab:\n__________________________\n__________________________\n\nAku tersenyum mendengar jawabannya. Setelah berfoto bersama, aku pun berpamitan. Di sepanjang perjalanan, perasaanku masih penuh. Bahagia. Lega. Dan sedikit tidak percaya bahwa aku benar-benar sudah sampai di titik ini bersamanya.\n\nTiba-tiba ponselku bergetar. Pesan dari Moya: “Terimakasih. Hati-hati di jalan, kalau sudah sampai kabari.”\n\nSetibanya di rumah, seperti biasanya kami kembali berbicara melalui telepon. Malam itu jalanan terasa lebih sepi. Aku menyetir perlahan karena aku ingin menikmati sisa-sisa perasaan itu lebih lama.\n\nCincin kecil berwarna emas itu mungkin hanya benda. Hadiah-hadiah itu mungkin tidak sempurna. Tapi niatku? Aku ingin menjadi seseorang yang serius ketika memilih. Dan malam itu, di bawah langit yang diam, aku sadar satu hal: mencintai bukan hanya tentang perasaan yang menggebu. Tapi tentang keberanian untuk berjanji. Dan kesiapan kita untuk menjaganya.\n\nDan jika suatu hari nanti Moya membaca kembali bab ini, aku ingin dia mengingat satu hal: bahwa aku mencintainya dengan sungguh-sungguh. Dan namanya adalah...\n\nMoya Barida. 🤍"></div>
+
+    <div class="mt-8 mb-6 border-t border-pink-50 pt-6">
+        <div class="photo-frame-bab">
+            <img src="c7.png" alt="Momen 23 Tahun Moya" class="bab-photo">
+        </div>
+        <p class="text-[10px] text-gray-400 italic text-center mt-3">
+            11 Maret 2026 Komitmen di jari manis.
+        </p>
+    </div>
+</div>
+<div id="ch-11" class="chapter-content">
+    <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-6 uppercase text-center"></h2>
+    
+    <div class="typewriter-text italic text-xs text-gray-600 mb-6" data-text="Moya adalah moya dan aku mencintai moya karena dia adalah moya"></div>
+
+    <div class="space-y-4 mb-6">
+        <div class="photo-frame-bab h-44">
+            <img src="g1.png" alt="Memory 1" class="bab-photo">
+        </div>
+        <div class="photo-frame-bab h-44">
+            <img src="g2.png" alt="Memory 2" class="bab-photo">
+        </div>
+    </div>
+
+    <div class="typewriter-text italic text-xs text-gray-600" data-text="“kau tau?, aku sering menceritakanmu pada bulan dan bintang di malam hari, pada gunung dan alam raya saat aku mendaki, pada pantai dan senja saat aku duduk sore hari di tepi pantai, pada bunga bunga saat aku bermain di taman bunga, agar mereka tau, bahwa aku sedang mencintai gadis yang tidak kalah indah dari mereka.”"></div>
+</div>
+
+<div id="ch-12" class="chapter-content">
+                        <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-6 uppercase text-center"></h2>
+                        <div class="typewriter-text italic text-xs text-gray-600 mb-6" data-text="dia bertutur seindah bait puisi, senyumnya bagai goresan seni yang tak ternilai, suaranya mengalun laksana simfoni surga, dan wajahnya adalah mahakarya yang tak tersaingi.\n\nkau tau?, aku sering menceritakanmu pada bulan dan bintang di malam hari, pada gunung dan alam raya saat aku mendaki, pada pantai dan senja saat aku duduk sore hari di tepi pantai, pada bunga bunga saat aku bermain di taman bunga, agar mereka tau, bahwa aku sedang mencintai gadis yang tidak kalah indah dari mereka."></div>
+                        <div class="space-y-4 mb-6">
+                            <div class="photo-frame-bab h-44"><img src="g3.png" alt="Memory 3" class="bab-photo"></div>
+                            <div class="photo-frame-bab h-44"><img src="g4.png" alt="Memory 4" class="bab-photo"></div>
+                        </div>
+                    </div>
+
+                    <div id="ch-13" class="chapter-content">
+                        <h2 class="text-[#e889a3] text-xs font-bold tracking-[0.2em] mb-4 uppercase text-center">Chapter 10</h2>
+                        <div class="typewriter-text italic text-xs text-gray-600 mb-6" data-text="catatan pertamaku lahir karena kamu menjadi tokoh utamanya, dan sampai kapan pun, kamu tetap menjadi tokoh favorit dalam setiap ceritaku.
+                        Jika cantik bisa diabadikan dalam sebuah cerita, maka aku akan menuliskan satu nama: Moya Barida Salim"></div>
+                        <div class="space-y-4">
+                            <div class="photo-frame-bab h-44"><img src="last1.png" alt="Memory Last 1" class="bab-photo"></div>
+                            <div class="photo-frame-bab h-44"><img src="last2.png" alt="Memory Last 2" class="bab-photo"></div>
+                        </div>
+                    </div>
+                    <div class="typewriter-text italic text-xs text-gray-600" data-text="“kau tau?, aku sering menceritakanmu pada bulan dan bintang di malam hari, pada gunung dan alam raya saat aku mendaki, pada pantai dan senja saat aku duduk sore hari di tepi pantai, pada bunga bunga saat aku bermain di taman bunga, agar mereka tau, bahwa aku sedang mencintai gadis yang tidak kalah indah dari mereka.\n\nkau tau?, aku sering menceritakanmu pada bulan dan bintang di malam hari, pada gunung dan alam raya saat aku mendaki, pada pantai dan senja saat aku duduk sore hari di tepi pantai, pada bunga bunga saat aku bermain di taman bunga, agar mereka tau, bahwa aku sedang mencintai gadis yang tidak kalah indah dari mereka.”"></div>
+
+               <div id="ch-14" class="chapter-content">
+    <div class="mt-4 typewriter-text text-center text-gray-700" 
+         data-text="Awalnya kamu hanya seseorang yang hadir biasa saja di hariku. Tapi tanpa aku sadari, namamu mulai sering kusebut dalam doa dan kupikirkan dalam diam.\n\nAku tidak tahu masa depan seperti apa yang menunggu kita, tapi aku tahu satu hal: aku ingin menjalaninya bersamamu.\n\nJadi, di catatan terakhir ini aku ingin jujur... aku mencintaimu.\n\nMaukah kamu menjadi bagian dari ceritaku, bukan hanya hari ini, tapi untuk halaman-halaman berikutnya?">
+    </div>
+
+    <div class="mt-8">
+        <div class="photo-frame-bab h-52">
+            <img src="final.png" alt="Final Photo" class="bab-photo">
+        </div>
+    </div>
+
+    <div class="mt-10 flex flex-col items-center gap-4 pb-20 relative">
+        <button onclick="terimaCinta()" 
+                class="bg-[#e889a3] text-white px-10 py-3 rounded-full font-bold shadow-lg transform transition active:scale-95 z-10">
+            MAU ❤
+        </button>
+        
+        <button id="btnNo" 
+                onmouseover="lari()" 
+                onclick="lari()"
+                class="text-[10px] text-gray-400 border border-gray-200 px-4 py-1 rounded-full transition-all duration-200 ease-out">
+            Tidak
+        </button>
+    </div>
+
+    <div id="final-message" class="hidden mt-6 text-center pb-10">
+        <p class="handwritten text-3xl text-[#e889a3] animate-pulse">Yeyyyy Official</p>
+        <p class="text-[9px] text-gray-400 tracking-[0.4em] uppercase mt-4">— ESA AKBAR FEBRIAN —</p>
+    </div>
+</div>
+                </div> <div class="pt-4 flex justify-between items-center border-t border-gray-100">
+                    <button onclick="prevChapter()" id="btnPrev" class="text-[10px] text-gray-300 uppercase tracking-widest pointer-events-none">Back</button>
+                    <div id="pageNumber" class="text-[10px] text-gray-400 font-bold">1 / 14</div>
+                    <button onclick="nextChapter()" id="btnNext" class="text-[10px] text-[#e889a3] font-bold uppercase tracking-widest">Next</button>
+                </div>            </div>
+
+            <div class="page front p-8 text-white cursor-pointer" onclick="openBook()">
+                <div class="text-[9px] uppercase tracking-[0.4em] mb-6 opacity-80 text-center">WRITTEN BY ESA AKBAR FEBRIAN</div>
+                <div id="typewriterTitle" class="text-3xl font-light tracking-wide h-28 leading-snug text-center"></div>
+                <div class="w-10 h-[1px] bg-white/30 my-4 mx-auto"></div>
+                <p class="text-[11px] leading-relaxed opacity-70 px-4 font-light italic text-center">
+                    Tentang pertemuan singkat di masa SMP, dan waktu yang mempertemukan kembali.
+                </p>
+               
+                <div class="moya-wrapper">
+                    <img src="p.png" alt="Moya" class="moya-img">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="myAudio" loop>
+        <source src="https://www.dropbox.com/scl/fi/8nf6iyxncky35ua6plt68/TULUS-Jatuh-Suka-CeeNaija.com-1.mp3?rlkey=kii01nzwud2uaq9y4q3tfs7v3&st=vpox11v1&dl=1" type="audio/mpeg">
+    </audio>
+
+  <script>
+    function lari() {
+    const btnNo = document.getElementById('btnNo');
+    
+    // Menghitung posisi acak di dalam layar HP/Browser
+    // Kita beri jarak 50px dari tepi agar tidak benar-benar hilang dari layar
+    const x = Math.random() * (window.innerWidth - btnNo.offsetWidth - 50);
+    const y = Math.random() * (window.innerHeight - btnNo.offsetHeight - 50);
+    
+    btnNo.style.position = 'fixed';
+    btnNo.style.left = x + 'px';
+    btnNo.style.top = y + 'px';
+    btnNo.style.zIndex = '9999';
+}
+
+function terimaCinta() {
+    // Sembunyikan tombol "Tidak" selamanya
+    const btnNo = document.getElementById('btnNo');
+    if(btnNo) btnNo.style.display = 'none';
+    
+    // Tampilkan pesan rahasia
+    document.getElementById('final-message').classList.remove('hidden');
+    
+    // Scroll otomatis ke paling bawah agar pesan "I Love You" terlihat
+    const scrollContainer = document.getElementById('scrollContainer');
+    scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+
+    // Efek ledakan hati
+    for(let i=0; i<30; i++) {
+        setTimeout(createHeart, i * 100);
+    }
+}
+    let currentChapter = 1;
+    const totalChapters = 14; // Sesuaikan dengan jumlah bab terakhirmu
+    const book = document.getElementById("myBook");
+    const audio = document.getElementById("myAudio");
+    const musicIcon = document.getElementById("musicBtnIcon");
+    const scrollContainer = document.getElementById("scrollContainer");
+    let isPlaying = false;
+    let typewriterTimeout;
+
+    function openBook() { 
+        book.classList.add("open"); 
+        updateChapter();
+    }
+
+    function toggleMusic() {
+        if (!isPlaying) {
+            audio.play().catch(e => console.log("Audio play blocked"));
+            musicIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+        } else {
+            audio.pause();
+            musicIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M8 5v14l11-7z"/></svg>`;
+        }
+        isPlaying = !isPlaying;
+    }
+
+    function runTypewriter() {
+        // Stop proses ngetik sebelumnya agar tidak tumpang tindih
+        clearTimeout(typewriterTimeout);
+        
+        const activeCh = document.getElementById(`ch-${currentChapter}`);
+        if (!activeCh) return;
+
+        const textElements = activeCh.querySelectorAll('.typewriter-text');
+        
+        // Kosongkan teks agar mulai dari awal
+        textElements.forEach(el => el.innerHTML = '');
+
+        let elementIndex = 0;
+
+        function typeNextElement() {
+            if (elementIndex >= textElements.length) return;
+
+            const element = textElements[elementIndex];
+            const text = element.getAttribute('data-text');
+            if (!text) {
+                elementIndex++;
+                typeNextElement();
+                return;
+            }
+
+            let charIndex = 0;
+
+            function type() {
+                if (charIndex < text.length) {
+                    let char = text.charAt(charIndex);
+                    
+                    if (char === "\\" && text.charAt(charIndex + 1) === "n") {
+                        element.innerHTML += "<br>";
+                        charIndex += 2;
+                    } else {
+                        element.innerHTML += char;
+                        charIndex++;
+                    }
+                    
+                    // AUTO-SCROLL DIHAPUS agar navigasi tetap stabil di bawah
+                    typewriterTimeout = setTimeout(type, 30);
+                } else {
+                    element.innerHTML += '<span class="cursor"></span>';
+                    elementIndex++;
+                    // Beri jeda sebelum lanjut ke paragraf berikutnya (jika ada)
+                    typewriterTimeout = setTimeout(typeNextElement, 500);
+                }
+            }
+            type();
+        }
+        typeNextElement();
+    }
+
+    function updateChapter() {
+        // Pastikan ngetik berhenti saat ganti halaman
+        clearTimeout(typewriterTimeout);
+
+        // Update visibilitas halaman
+        document.querySelectorAll('.chapter-content').forEach(ch => {
+            ch.classList.remove('active');
+        });
+        
+        const activeCh = document.getElementById(`ch-${currentChapter}`);
+        if (activeCh) {
+            activeCh.classList.add('active');
+        }
+        
+        // Paksa scroll kembali ke atas agar Moya mulai baca dari awal bab
+        if (scrollContainer) {
+            scrollContainer.scrollTo(0, 0);
+        }
+
+        // Update nomor halaman
+        const pageNumElem = document.getElementById('pageNumber');
+        if (pageNumElem) pageNumElem.innerText = `${currentChapter} / ${totalChapters}`;
+        
+        // Jalankan ngetik jika bukan halaman pertama (sampul)
+        if (currentChapter > 1) {
+            runTypewriter();
+        }
+
+        // Atur warna dan fungsi tombol navigasi
+        const btnPrev = document.getElementById('btnPrev');
+        if (btnPrev) {
+            btnPrev.style.color = (currentChapter === 1) ? "#d1d5db" : "#e889a3";
+            btnPrev.style.pointerEvents = (currentChapter === 1) ? "none" : "auto";
+        }
+        
+        const btnNext = document.getElementById('btnNext');
+        if (btnNext) {
+            btnNext.innerText = (currentChapter === totalChapters) ? "Close" : "Next";
+        }
+    }
+
+    function nextChapter() {
+        if (currentChapter < totalChapters) {
+            currentChapter++;
+            updateChapter();
+        } else {
+            // Jika sudah di halaman terakhir, tutup buku dan reset
+            book.classList.remove("open");
+            currentChapter = 1;
+            // Beri waktu animasi tutup buku selesai sebelum reset teks
+            setTimeout(updateChapter, 1000);
+        }
+    }
+
+    function prevChapter() {
+        if (currentChapter > 1) {
+            currentChapter--;
+            updateChapter();
+        }
+    }
+
+    // Partikel Hati
+    function createHeart() {
+        const container = document.getElementById('heart-container');
+        if(!container) return;
+        const heart = document.createElement('div');
+        heart.className = 'heart-particle';
+        heart.innerHTML = '❤';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.bottom = '-5vh';
+        heart.style.fontSize = Math.random() * 15 + 10 + 'px';
+        heart.style.animationDuration = Math.random() * 3 + 4 + 's';
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 6000);
+    }
+    setInterval(createHeart, 500);
+
+    // Animasi Judul Sampul
+    const titleText = "GADIS CANTIK\nBERNAMA MOYA\nBARIDA";
+    const titleElement = document.getElementById('typewriterTitle');
+    let j = 0;
+    function typeWriterTitle() {
+        if (titleElement && j < titleText.length) {
+            if (titleText.charAt(j) === "\n") titleElement.innerHTML += "<br>";
+            else titleElement.innerHTML += titleText.charAt(j);
+            j++;
+            setTimeout(typeWriterTitle, 100);
+        }
+    }
+
+    // Inisialisasi saat halaman selesai dimuat
+    window.onload = () => {
+        setTimeout(typeWriterTitle, 1000);
+    };
+</script>
+</body>
+</html>
